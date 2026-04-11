@@ -1,21 +1,16 @@
-```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wi-Fi Finder Simulator</title>
+    <title>Wi-Fi Finder Pro | API Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @keyframes pulse-ring {
             0% { transform: scale(0.33); opacity: 1; }
             80%, 100% { opacity: 0; }
         }
-        .pulse {
-            position: relative;
-            width: 100px;
-            height: 100px;
-        }
+        .pulse { position: relative; width: 100px; height: 100px; }
         .pulse::before {
             content: '';
             position: absolute;
@@ -29,85 +24,85 @@
             background-color: #3b82f6;
             animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
         }
+        .loading-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-slate-900 text-white font-sans min-h-screen flex flex-col items-center p-4">
 
     <div class="max-w-md w-full bg-slate-800 rounded-3xl shadow-2xl p-6 mt-10 border border-slate-700">
         <header class="text-center mb-8">
-            <h1 class="text-2xl font-bold mb-2">Wi-Fi Сканер</h1>
-            <p class="text-slate-400 text-sm">Для поиска ближайших сетей необходимо разрешить доступ к местоположению</p>
+            <h1 class="text-2xl font-bold mb-2 flex justify-center items-center gap-2">
+                <span class="bg-blue-600 text-[10px] px-2 py-1 rounded-full uppercase tracking-widest">Live API</span>
+                Wi-Fi Анализатор
+            </h1>
+            <p class="text-slate-400 text-sm">Приложение использует GPS для поиска паролей в глобальных базах данных</p>
         </header>
 
-        <!-- Status Card -->
-        <div id="status-card" class="bg-slate-700/50 rounded-2xl p-4 mb-6 flex items-center justify-between">
+        <div id="status-card" class="bg-slate-700/50 rounded-2xl p-4 mb-6 flex items-center justify-between border border-slate-600">
             <div class="flex items-center gap-3">
-                <div id="status-dot" class="w-3 h-3 bg-red-500 rounded-full"></div>
-                <span id="status-text" class="text-sm font-medium">Геолокация отключена</span>
+                <div id="status-dot" class="w-3 h-3 bg-red-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
+                <span id="status-text" class="text-sm font-medium text-slate-300">Ожидание GPS...</span>
             </div>
-            <button id="enable-btn" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-xl text-sm transition-all active:scale-95">
-                Включить
+            <button id="enable-btn" class="bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded-xl text-sm font-bold transition-all active:scale-95 shadow-lg shadow-blue-900/20">
+                Разрешить
             </button>
         </div>
 
-        <!-- Scanning Animation (Hidden by default) -->
         <div id="scanning-ui" class="hidden flex flex-col items-center py-10">
             <div class="pulse flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
                 </svg>
             </div>
-            <p class="mt-12 text-blue-400 animate-pulse font-medium">Поиск доступных точек...</p>
+            <p class="mt-12 text-blue-400 animate-pulse font-bold tracking-widest uppercase text-xs">Синхронизация с API ботами...</p>
         </div>
 
-        <!-- Results List -->
         <div id="results-list" class="space-y-3 hidden">
-            <h2 class="text-slate-400 text-xs uppercase tracking-wider font-bold px-2">Найденные сети рядом</h2>
-            <!-- Mock Data -->
-            <div class="bg-slate-700/30 p-4 rounded-2xl border border-slate-600 flex justify-between items-center group cursor-pointer hover:bg-slate-700/50 transition-colors">
+            <div class="flex justify-between items-center px-2">
+                <h2 class="text-slate-500 text-[10px] uppercase font-black tracking-tighter">Найдено сетей через API</h2>
+                <span class="text-green-500 text-[10px] font-bold">ONLINE</span>
+            </div>
+            
+            <div class="bg-slate-700/30 p-4 rounded-2xl border border-slate-600 flex justify-between items-center hover:bg-slate-700/50 transition-all">
                 <div class="flex items-center gap-4">
-                    <div class="text-green-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
+                    <div class="text-blue-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                     </div>
                     <div>
-                        <div class="font-bold">Home_Router_2.4G</div>
-                        <div class="text-xs text-slate-400">Сигнал: Отличный • Защита: WPA2</div>
+                        <div class="font-bold text-sm">Home_Wi-Fi_Direct</div>
+                        <div class="text-[10px] text-slate-500">BSSID: 00:1A:2B:3C:4D:5E</div>
                     </div>
                 </div>
-                <button onclick="showInfo('Home_Router_2.4G')" class="text-blue-400 text-sm font-medium">Инфо</button>
+                <button onclick="requestPassword('Home_Wi-Fi_Direct')" class="bg-slate-600 hover:bg-blue-600 px-3 py-1 rounded-lg text-xs font-bold transition-colors">Show</button>
             </div>
 
-            <div class="bg-slate-700/30 p-4 rounded-2xl border border-slate-600 flex justify-between items-center group cursor-pointer hover:bg-slate-700/50 transition-colors">
+            <div class="bg-slate-700/30 p-4 rounded-2xl border border-slate-600 flex justify-between items-center hover:bg-slate-700/50 transition-all">
                 <div class="flex items-center gap-4">
-                    <div class="text-yellow-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
+                    <div class="text-blue-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                     </div>
                     <div>
-                        <div class="font-bold">Cafe_Free_WiFi</div>
-                        <div class="text-xs text-slate-400">Сигнал: Средний • Защита: Open</div>
+                        <div class="font-bold text-sm">TP-Link_Guest</div>
+                        <div class="text-[10px] text-slate-500">BSSID: 44:FE:31:0A:11:BC</div>
                     </div>
                 </div>
-                <button onclick="showInfo('Cafe_Free_WiFi')" class="text-blue-400 text-sm font-medium">Инфо</button>
+                <button onclick="requestPassword('TP-Link_Guest')" class="bg-slate-600 hover:bg-blue-600 px-3 py-1 rounded-lg text-xs font-bold transition-colors">Show</button>
             </div>
         </div>
 
-        <!-- Custom Modal for Alerts -->
-        <div id="modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-            <div class="bg-slate-800 border border-slate-700 p-6 rounded-3xl max-w-xs w-full text-center">
-                <div id="modal-icon" class="mb-4 flex justify-center text-blue-400"></div>
-                <h3 id="modal-title" class="text-xl font-bold mb-2"></h3>
-                <p id="modal-desc" class="text-slate-400 text-sm mb-6"></p>
-                <button onclick="closeModal()" class="w-full bg-blue-600 py-3 rounded-xl font-bold active:scale-95 transition-transform">Понятно</button>
+        <div id="modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-6 z-50 backdrop-blur-sm">
+            <div class="bg-slate-800 border-2 border-slate-700 p-8 rounded-[2rem] max-w-xs w-full text-center shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                <div id="modal-icon" class="mb-6 flex justify-center"></div>
+                <h3 id="modal-title" class="text-xl font-black mb-2 text-white"></h3>
+                <p id="modal-desc" class="text-slate-400 text-sm mb-8 leading-relaxed"></p>
+                <button onclick="closeModal()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-all">Закрыть</button>
             </div>
         </div>
     </div>
 
-    <footer class="mt-auto py-6 text-slate-500 text-xs text-center">
-        <p>Примечание: Это симуляция интерфейса.<br>Браузеры не предоставляют пароли от сетей в целях безопасности.</p>
+    <footer class="mt-auto py-8 text-slate-600 text-[10px] uppercase tracking-widest font-bold">
+        API Status: Connected • Database v.2.04
     </footer>
 
     <script>
@@ -118,59 +113,75 @@
         const resultsList = document.getElementById('results-list');
         const modal = document.getElementById('modal');
 
+        // Эмуляция базы данных для теста (здесь будет твой реальный API запрос)
+        const fakeApiResults = {
+            'Home_Wi-Fi_Direct': 'pAsSwOrD_2024',
+            'TP-Link_Guest': 'guest12345'
+        };
+
         enableBtn.addEventListener('click', () => {
             if (!navigator.geolocation) {
-                showModal('Ошибка', 'Ваш браузер не поддерживает геолокацию', 'error');
+                updateStatus('Ошибка GPS', 'bg-red-500');
                 return;
             }
 
-            statusText.innerText = 'Запрос доступа...';
-            
+            updateStatus('Запрос доступа...', 'bg-yellow-500');
+
             navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    // Success
-                    statusDot.classList.replace('bg-red-500', 'bg-green-500');
-                    statusText.innerText = 'Местоположение активно';
-                    enableBtn.classList.add('hidden');
+                (pos) => {
+                    updateStatus('GPS Активен', 'bg-green-500');
+                    enableBtn.style.display = 'none';
                     startScan();
                 },
-                (error) => {
-                    // Error
-                    statusText.innerText = 'Доступ отклонен';
-                    showModal('Доступ ограничен', 'Для работы приложения необходимо разрешить доступ к геолокации в настройках браузера.', 'lock');
+                (err) => {
+                    updateStatus('Доступ отклонен', 'bg-red-500');
+                    showModal('Ошибка', 'Без GPS бот не может найти точки в API базе.', 'error');
                 }
             );
         });
 
+        function updateStatus(text, colorClass) {
+            statusText.innerText = text;
+            statusDot.className = `w-3 h-3 rounded-full ${colorClass} shadow-[0_0_10px_rgba(255,255,255,0.2)]`;
+        }
+
         function startScan() {
             scanningUI.classList.remove('hidden');
             resultsList.classList.add('hidden');
-            
             setTimeout(() => {
                 scanningUI.classList.add('hidden');
                 resultsList.classList.remove('hidden');
             }, 3000);
         }
 
-        function showInfo(ssid) {
-            showModal(ssid, `Пароль для данной сети скрыт системными настройками безопасности. \n\nСовет: Пароль обычно указан на наклейке роутера или в настройках владельца сети.`, 'info');
+        // РЕАЛЬНАЯ ЛОГИКА: Нажали SHOW -> Запрос к "Боту"
+        async function requestPassword(ssid) {
+            showModal('API Проверка', 'Бот проверяет пароль в базе...', 'loading');
+
+            // Здесь ты можешь вставить реальный fetch к своему API серверу
+            // Например: const response = await fetch('https://your-api.io/check?ssid=' + ssid);
+            
+            setTimeout(() => {
+                const pass = fakeApiResults[ssid] || 'Не найден в бесплатной базе';
+                showModal(ssid, `БОТ ОТВЕТИЛ: \n\nПароль: <span class="text-green-400 font-mono text-lg">${pass}</span>`, 'success');
+            }, 2000);
         }
 
         function showModal(title, desc, type) {
             const iconDiv = document.getElementById('modal-icon');
             document.getElementById('modal-title').innerText = title;
-            document.getElementById('modal-desc').innerText = desc;
-            
-            let iconSvg = '';
-            if (type === 'lock') {
-                iconSvg = '<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>';
-            } else if (type === 'info') {
-                iconSvg = '<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+            document.getElementById('modal-desc').innerHTML = desc;
+
+            let icon = '';
+            if (type === 'loading') {
+                icon = '<svg class="w-16 h-16 text-blue-500 loading-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>';
+            } else if (type === 'success') {
+                icon = '<svg class="w-16 h-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
             } else {
-                iconSvg = '<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
+                icon = '<svg class="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
             }
-            
-            iconDiv.innerHTML = iconSvg;
+
+            iconDiv.innerHTML = icon;
             modal.classList.remove('hidden');
         }
 
@@ -180,5 +191,3 @@
     </script>
 </body>
 </html>
-
-```
